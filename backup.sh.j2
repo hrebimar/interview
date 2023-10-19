@@ -2,9 +2,10 @@
 
 now=$(date +%d-%b-%H_%M)
 folder=/var/interview/backup/$now
+contname=$(docker ps |grep maria |grep homework|rev |cut -d " " -f1 | rev)
 
 mkdir $folder
-docker exec homework-db /usr/bin/mysqldump -u root --password={{ db_root_password }} {{ db_name }} > $folder/dbdump.sql
+docker exec $contname /usr/bin/mysqldump -u root --password={{ db_root_password }} {{ db_name }} > $folder/dbdump.sql
 
 tar -czf /var/interview/backup/backup_$now.tgz $folder/*
 
