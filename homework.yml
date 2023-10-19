@@ -60,9 +60,12 @@
           - runc
         state: absent
 
-    - name: Make sure yum utils are present to be able to add docker repository
+    - name: Make sure utils are present
       ansible.builtin.dnf:
-        name: yum-utils
+        name:
+          - yum-utils
+          - python3.11
+          - python3.11-pip
         state: present
 
     - name: Signing key for docker-ce repository is present
