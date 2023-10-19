@@ -1,7 +1,7 @@
 - name: Xitee homework
   hosts: localhost
   become: true
-  variables:
+  vars:
     - db_root_password: Secretpassword
     - db_name: interview
     - db_user_name: interview
