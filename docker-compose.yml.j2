@@ -6,10 +6,10 @@ services:
       - /var/interview/db:/var/lib/mysql
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD= {{ db_root_password }}
-      - MYSQL_DATABASE= {{ db_name }}
-      - MYSQL_USER= {{ db_user_name }}
-      - MYSQL_PASSWORD= {{ db_user_password }}
+      - MYSQL_ROOT_PASSWORD={{ db_root_password }}
+      - MYSQL_DATABASE={{ db_name }}
+      - MYSQL_USER={{ db_user_name }}
+      - MYSQL_PASSWORD={{ db_user_password }}
     expose:
       - 3306
       - 33060
