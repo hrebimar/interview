@@ -109,6 +109,13 @@
         minute: 0
         job: /root/backup.sh
 
+    - name: open port for http
+      ansible.posix.firewalld:
+        service: http
+        state: enabled 
+        permanent: true
+        immediate: true
+
   handlers:
     - name: "docker compose check"
       ansible.builtin.shell:
