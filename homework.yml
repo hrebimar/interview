@@ -1,0 +1,137 @@
+- name: Xitee homework
+  hosts: localhost
+  become: true
+  variables:
+    - db_root_password: Secretpassword
+    - db_name: interview
+    - db_user_name: interview
+    - db_user_password: Secretpassword
+    - wordpress_tag: "latest"
+    - mariadb_tag: "10.6.4-focal"
+  tasks:
+    - name: Create user xitest
+      ansible.builtin.user:
+        name: xitest
+        password: "$6$bYcY8vs5MokABAEF$w805bP9JHt7tOjZDFhVbOxShg52Au9yxN69ATh38mISBNgJr7ZQ0n4KSrGtkUqEsyqFCguuSQyhjbevCpPn3a/" #tajneheslo
+        groups: wheel
+        append: yes
+    # - name: Add ssh keys
+    #   ansible.posix.authorized_key:
+    #     user: xitest
+    #     state: present
+    #     key: "{{ item }}"
+    #   with_items:
+    #     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOH/TlOb8TAXiMhN8u7VNqPC7W2hrhygm/1BZBZZp0qo marek@GUADALAJARA-WSL
+    #     - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP7FHrfu37DbzYBs6T3P/aq+XOeJAtu8Ftl1/3g1EN/K tkuba
+    - name: Add ssh keys
+      ansible.posix.authorized_key:
+        user: xitest
+        state: present
+        key: 
+          - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOH/TlOb8TAXiMhN8u7VNqPC7W2hrhygm/1BZBZZp0qo marek@GUADALAJARA-WSL
+          - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP7FHrfu37DbzYBs6T3P/aq+XOeJAtu8Ftl1/3g1EN/K tkuba
+    - name: Create directories for persistence and backups
+      ansible.builtin.file:
+        path: "/var/interview/{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      with_items:
+        - db
+        - data
+        - backups
+    - name: copy docker compose template to root folder
+      ansible.builtin.template:
+        src: ./docker-compose.yml.j2
+        dest: /root/docker-compose.yml
+        owner: root
+        group: root
+        mode: "0600"
+      notify: 
+        - "docker compose check"
+        - "docker compose up"
+        - "docker compose restart"
+
+    - name: remove unnecessary packages colliding with docker-ce
+      ansible.builtin.dnf:
+        name:
+          - podman
+          - runc
+        state: absent
+
+    - name: Make sure yum utils are present to be able to add docker repository
+      ansible.builtin.dnf:
+        name: yum-utils
+        state: present
+
+    - name: Signing key for docker-ce repository is present
+      ansible.builtin.rpm_key:
+        key: "https://download.docker.com/linux/centos/gpg"
+        state: present
+
+    - name: Repository for docker-ce is present
+      ansible.builtin.yum_repository:
+        name: docker-ce
+        description: docker-ce repository
+        baseurl: "https://download.docker.com/linux/centos/$releasever/$basearch/stable"
+        enabled: true
+        gpgcheck: true
+        gpgkey: "https://download.docker.com/linux/centos/gpg"
+    
+    - name: install docker and docker compose
+      ansible.builtin.dnf:
+        name:
+         - docker-ce
+         - docker-ce-cli
+         - containerd.io
+         - docker-buildx-plugin
+         - docker-compose-plugin
+
+    - name: Make sure docker is started and enabled
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: true
+    
+    - name: copy backup script from template
+      ansible.builtin.template:
+        src: ./backup.sh.j2
+        dest: /root/backup.sh
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: create cron for backups
+      ansible.builtin.cron:
+        name: backups
+        hour: "0,8,16"
+        minute: 0
+        job: /root/backup.sh
+
+  handlers:
+    - name: "docker commpose check"
+      ansible.builtin.shell:
+        cmd: "docker compose ls | grep homework | wc -l "
+      register: docker_lines
+    - name: "docker compose up"
+      ansible.builtin.shell:
+        cmd: "docker compose -p homework up -d "
+        chdir: /root
+      when: docker_lines.stdout !="1"
+    - name: "docker compose up"
+      ansible.builtin.shell:
+        cmd: "docker compose -p homework restart"
+      when: docker_lines.stdout =="1"
+
+  
+         
+          
+
+
+    
+
+        
+
+
+    

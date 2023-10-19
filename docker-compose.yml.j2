@@ -1,0 +1,27 @@
+services:
+  db:
+    image: mariadb:{{ mariadb_tag }}
+    command: '--default-authentication-plugin=mysql_native_password'
+    volumes:
+      - /var/interview/db:/var/lib/mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD= {{ db_root_password }}
+      - MYSQL_DATABASE= {{ db_name }}
+      - MYSQL_USER= {{ db_user }}
+      - MYSQL_PASSWORD= {{ db_user_password }}
+    expose:
+      - 3306
+      - 33060
+  wordpress:
+    image: wordpress:{{ wordpress_tag }}
+    ports:
+      - 80:80
+    restart: always
+    environment:
+      - WORDPRESS_DB_HOST=db
+      - WORDPRESS_DB_USER={{ db_user }}
+      - WORDPRESS_DB_PASSWORD={{ db_user_password }}
+      - WORDPRESS_DB_NAME={{ db_name }}
+    volumes:
+      - /var/interview/data:/var/lib/mysql
