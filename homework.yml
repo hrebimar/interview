@@ -118,6 +118,8 @@
         state: enabled 
         permanent: true
         immediate: true
+      vars:
+        ansible_python_interpreter: /usr/bin/python3
 
   handlers:
     - name: "docker compose check"
